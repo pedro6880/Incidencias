@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Registro compartido de incidencias para el centro educativo"
+    />
+    <title>Parte de Aula | Registro de incidencias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-shape background-shape-one"></div>
+    <div class="background-shape background-shape-two"></div>
+
+    <main>
+      <section id="auth-view" class="auth-layout">
+        <div class="auth-intro">
+          <div class="brand">
+            <div class="brand-mark">PA</div>
+            <span>Parte de Aula</span>
+          </div>
+          <p class="eyebrow">Registro del centro</p>
+          <h1>Las incidencias, claras y en un solo lugar.</h1>
+          <p class="intro-copy">
+            Registra cualquier incidencia del aula en unos segundos y mantén al
+            equipo informado.
+          </p>
+          <div class="feature-list">
+            <div><span>01</span> Registro sencillo y directo</div>
+            <div><span>02</span> Consulta compartida con el equipo</div>
+            <div><span>03</span> Filtrado rápido por aula o profesor</div>
+          </div>
+        </div>
+
+        <div class="auth-card">
+          <p class="eyebrow">Acceso privado</p>
+          <h2>Bienvenido</h2>
+          <p class="muted">
+            Escribe tu correo. Recibirás un enlace para entrar sin contraseña.
+          </p>
+
+          <form id="login-form" class="form-stack">
+            <label>
+              <span>Correo electrónico</span>
+              <input id="login-email" type="email" required autocomplete="email" placeholder="nombre@centro.es" />
+            </label>
+            <button class="button button-primary" type="submit">Recibir enlace de acceso</button>
+          </form>
+          <p id="auth-message" class="form-message" role="status"></p>
+        </div>
+      </section>
+
+      <section id="dashboard-view" class="dashboard hidden">
+        <header class="dashboard-header">
+          <div class="brand">
+            <div class="brand-mark">PA</div>
+            <div>
+              <span>Parte de Aula</span>
+              <small>Registro compartido</small>
+            </div>
+          </div>
+          <div class="user-actions">
+            <span id="user-email" class="user-email"></span>
+            <button id="logout-button" class="button button-ghost" type="button">Salir</button>
+          </div>
+        </header>
+
+        <div class="dashboard-content">
+          <div class="dashboard-title">
+            <div>
+              <p class="eyebrow">Panel de seguimiento</p>
+              <h1>Registro de incidencias</h1>
+              <p class="muted">Consulta y registra la actividad del centro.</p>
+            </div>
+            <button id="open-modal-button" class="button button-primary button-add" type="button">
+              <span>+</span> Nueva incidencia
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card stat-card-main">
+              <span class="stat-label">Total registradas</span>
+              <strong id="total-count">0</strong>
+              <small>Incidencias compartidas</small>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Registradas hoy</span>
+              <strong id="today-count">0</strong>
+              <small>Durante la jornada actual</small>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Últimos 7 días</span>
+              <strong id="week-count">0</strong>
+              <small>Actividad reciente</small>
+            </article>
+          </div>
+
+          <section class="records-panel">
+            <div class="records-toolbar">
+              <div>
+                <h2>Historial</h2>
+                <p id="record-summary" class="muted">Cargando incidencias...</p>
+              </div>
+              <div class="filter-row">
+                <label class="search-field">
+                  <span aria-hidden="true">⌕</span>
+                  <input id="search-input" type="search" placeholder="Buscar aula, profesor..." />
+                </label>
+                <label class="date-filter">
+                  <span>Desde</span>
+                  <input id="date-filter" type="date" />
+                </label>
+              </div>
+            </div>
+
+            <div id="loading-state" class="empty-state">
+              <div class="loader"></div>
+              <p>Cargando el registro...</p>
+            </div>
+            <div id="empty-state" class="empty-state hidden">
+              <div class="empty-icon">+</div>
+              <h3>Todavía no hay incidencias</h3>
+              <p>Registra la primera para empezar a construir el historial.</p>
+            </div>
+            <div id="records-list" class="records-list"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="incident-modal" class="modal">
+      <form id="incident-form" class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Nuevo registro</p>
+            <h2>Añadir incidencia</h2>
+          </div>
+          <button id="close-modal-button" class="icon-button" type="button" aria-label="Cerrar">×</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            <span>Aula o ubicación</span>
+            <input id="incident-location" type="text" required maxlength="120" placeholder="Ej. Aula 2ºB, patio, pasillo..." />
+          </label>
+          <label>
+            <span>Nombre del profesor</span>
+            <input id="incident-teacher" type="text" required maxlength="160" placeholder="Nombre y apellidos" />
+          </label>
+          <label>
+            <span>Fecha de la incidencia</span>
+            <input id="incident-date" type="date" required />
+          </label>
+          <label class="full-width">
+            <span>Incidencia</span>
+            <textarea id="incident-description" required maxlength="2000" rows="5" placeholder="Describe brevemente lo ocurrido..."></textarea>
+          </label>
+        </div>
+        <p id="incident-message" class="form-message" role="status"></p>
+        <div class="modal-actions">
+          <button id="cancel-modal-button" class="button button-ghost" type="button">Cancelar</button>
+          <button class="button button-primary" type="submit">Guardar incidencia</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./app-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
