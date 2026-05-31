@@ -1,71 +1,50 @@
 # Parte de Aula
 
-Aplicación web sencilla para registrar incidencias compartidas usando un proyecto
+Aplicación web para registrar incidencias compartidas usando un proyecto
 Supabase existente. Las tablas se guardan en el schema `incidencias` para no
 mezclarlas con otras aplicaciones del mismo proyecto.
 
-## Configuración
+## Configurar Supabase
 
-1. Abre tu proyecto en Supabase y ejecuta `supabase-setup.sql` desde **SQL Editor**.
-2. Ve a **Project Settings > API > Exposed schemas** y añade `incidencias`.
-3. Abre **Project Settings > API** y localiza la URL del proyecto y la clave
-   pública `anon` o `publishable`.
-4. Edita `app-config.js` y reemplaza los dos valores de ejemplo.
-5. En Supabase, revisa **Authentication > Providers > Email**. Mantén activado
-   el proveedor de correo. Los profesores accederán mediante un enlace enviado
-   a su email, sin contraseña.
+1. Abre `supabase-setup.sql` y copia su contenido.
+2. Pégalo en **SQL Editor** de Supabase.
+3. Sustituye `CAMBIA-ESTE-PIN` únicamente dentro del editor SQL de Supabase.
+4. Ejecuta el script completo sin guardar el PIN en los archivos del proyecto.
+5. Ve a **Project Settings > API > Exposed schemas** y añade `incidencias`.
+6. Comprueba que `app-config.js` contiene la URL y la clave pública
+   `publishable` de tu proyecto.
 
-## Ejecutar en local
+El PIN se almacena como hash en Supabase. No se publica en Vercel ni se incluye
+en el código JavaScript. Usa un PIN largo o una frase breve para dificultar
+intentos de adivinación.
+
+## Acceso
+
+Los profesores introducen el PIN compartido del centro. La aplicación lo
+conserva únicamente durante la sesión de la pestaña del navegador. Ya no utiliza
+correos, enlaces de acceso ni contraseñas individuales.
+
+Todos los usuarios que conozcan el PIN pueden consultar, registrar y eliminar
+incidencias. Cambia el PIN ejecutando de nuevo `supabase-setup.sql` con un valor
+nuevo si deja de ser confidencial.
+
+## Ejecutar En Local
 
 En Windows, haz doble clic en:
 
 `iniciar-app.cmd`
 
-La aplicación abrirá directamente `index.html` en el navegador. No necesita
-Python, una consola abierta ni un servidor local.
+## Publicar En Vercel
 
-## Publicar en Vercel
+Esta aplicación es un sitio estático. Sube todos los archivos a tu repositorio
+conectado a Vercel o crea un despliegue nuevo desde la web de Vercel.
 
-Esta aplicación es un sitio estático. No necesita comando de compilación.
-
-### Desde la web de Vercel
-
-1. Crea un repositorio GitHub con los archivos de esta carpeta.
-2. Entra en `https://vercel.com/new` e importa el repositorio.
-3. En **Framework Preset**, elige **Other**.
-4. Deja vacíos **Build Command** y **Output Directory**.
-5. Pulsa **Deploy**.
-
-### Configurar Supabase Auth
-
-Cuando Vercel muestre la URL pública, por ejemplo
-`https://parte-de-aula.vercel.app`, abre Supabase:
-
-1. Ve a **Authentication > URL Configuration**.
-2. Cambia **Site URL** por la URL pública de Vercel.
-3. Añade la dirección exacta en **Redirect URLs**:
-   `https://parte-de-aula.vercel.app/`.
-4. Añade también la misma dirección terminada en `/**` para admitir rutas:
-   `https://parte-de-aula.vercel.app/**`.
-
-## Acceso de profesores
-
-La aplicación utiliza enlaces de acceso por correo electrónico. No es necesario
-crear ni recordar contraseñas. Supabase crea el usuario cuando accede por primera
-vez y mantiene la sesión en el navegador.
-
-En **Authentication > URL Configuration**, configura correctamente **Site URL**
-y **Redirect URLs** para que el enlace recibido por correo vuelva a la aplicación
-publicada en Vercel.
-
-La URL de Supabase y la clave pública `publishable` se encuentran en
-`app-config.js`. La clave `service_role` nunca debe incluirse en la aplicación.
+Usa **Framework Preset: Other** y deja vacíos **Build Command** y
+**Output Directory**.
 
 ## Seguridad
 
-- La aplicación solo utiliza la clave pública. Nunca pegues la clave
-  `service_role` en `app-config.js`.
-- Todos los usuarios autenticados pueden consultar las incidencias compartidas.
-- Cada usuario puede eliminar únicamente las incidencias que registró.
-- La creación comprueba que el identificador del autor coincide con el usuario
-  autenticado mediante Row Level Security.
+- Utiliza únicamente la clave pública `publishable` en `app-config.js`.
+- Nunca incluyas la clave `service_role` en los archivos publicados.
+- La tabla no está expuesta directamente al navegador.
+- Las operaciones pasan por funciones SQL que validan el PIN.

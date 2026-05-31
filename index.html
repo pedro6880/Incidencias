@@ -44,15 +44,15 @@
           <p class="eyebrow">Acceso privado</p>
           <h2>Bienvenido</h2>
           <p class="muted">
-            Escribe tu correo. Recibirás un enlace para entrar sin contraseña.
+            Introduce el PIN compartido del centro para consultar el registro.
           </p>
 
           <form id="login-form" class="form-stack">
             <label>
-              <span>Correo electrónico</span>
-              <input id="login-email" type="email" required autocomplete="email" placeholder="nombre@centro.es" />
+              <span>PIN del centro</span>
+              <input id="login-pin" type="password" required inputmode="numeric" autocomplete="current-password" placeholder="Introduce el PIN" />
             </label>
-            <button class="button button-primary" type="submit">Recibir enlace de acceso</button>
+            <button class="button button-primary" type="submit">Entrar</button>
           </form>
           <p id="auth-message" class="form-message" role="status"></p>
         </div>
@@ -68,7 +68,7 @@
             </div>
           </div>
           <div class="user-actions">
-            <span id="user-email" class="user-email"></span>
+            <span class="user-email">Acceso del centro</span>
             <button id="logout-button" class="button button-ghost" type="button">Salir</button>
           </div>
         </header>
@@ -174,7 +174,7 @@
     <div id="toast" class="toast" role="status"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app-config.js?v=20260601-1"></script>
-    <script src="./app.js?v=20260601-1"></script>
+    <script src="./app-config.js?v=20260601-2"></script>
+    <script src="./app.js?v=20260601-2"></script>
   </body>
 </html>

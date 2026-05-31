@@ -17,7 +17,7 @@ const authMessage = document.querySelector("#auth-message");
 const incidentMessage = document.querySelector("#incident-message");
 let records = [];
 let toastTimer;
-let currentUserId = null;
+let centerPin = sessionStorage.getItem("centerPin");
 
 function showView(name) {
   Object.entries(views).forEach(([key, view]) => {
@@ -28,14 +28,6 @@ function showView(name) {
 function setMessage(element, text, success = false) {
   element.textContent = text;
   element.style.color = success ? "#1b5949" : "#a23d32";
-}
-
-function authErrorMessage(error) {
-  if (error?.message?.toLowerCase().includes("email rate limit exceeded")) {
-    return "Se han solicitado demasiados enlaces. Espera unos minutos y vuelve a intentarlo.";
-  }
-
-  return error?.message ?? "No se pudo completar el acceso.";
 }
 
 function showToast(message) {
@@ -69,8 +61,7 @@ if (!configured) {
     authMessage,
     "Falta configurar Supabase. Abre app-config.js e introduce la URL y la clave pública del proyecto."
   );
-}
-else {
+} else {
   document.title = `${document.title} · ${config.version}`;
 }
 
@@ -80,41 +71,41 @@ const client = configured
     })
   : null;
 
+function rpcErrorMessage(error) {
+  if (error?.message?.includes("PIN incorrecto")) return "El PIN introducido no es correcto.";
+  return error?.message ?? "No se pudo completar la operación.";
+}
+
 async function loadRecords() {
   loadingState.classList.remove("hidden");
   emptyState.classList.add("hidden");
   recordsList.innerHTML = "";
 
-  const { data, error } = await client
-    .from("registros")
-    .select("*")
-    .order("fecha_incidencia", { ascending: false })
-    .order("created_at", { ascending: false });
-
+  const { data, error } = await client.rpc("listar_registros", { p_pin: centerPin });
   loadingState.classList.add("hidden");
 
   if (error) {
-    showToast(`No se pudo cargar el registro: ${error.message}`);
-    return;
+    logout();
+    setMessage(authMessage, rpcErrorMessage(error));
+    return false;
   }
 
   records = data;
   renderRecords();
   updateStats();
+  return true;
 }
 
 function filteredRecords() {
   const search = document.querySelector("#search-input").value.trim().toLowerCase();
   const date = document.querySelector("#date-filter").value;
-
   return records.filter((record) => {
     const matchesText =
       !search ||
       record.aula_ubicacion.toLowerCase().includes(search) ||
       record.nombre_profesor.toLowerCase().includes(search) ||
       record.incidencia.toLowerCase().includes(search);
-    const matchesDate = !date || record.fecha_incidencia >= date;
-    return matchesText && matchesDate;
+    return matchesText && (!date || record.fecha_incidencia >= date);
   });
 }
 
@@ -122,7 +113,6 @@ function renderRecords() {
   const visibleRecords = filteredRecords();
   document.querySelector("#record-summary").textContent =
     `${visibleRecords.length} ${visibleRecords.length === 1 ? "registro visible" : "registros visibles"}`;
-
   emptyState.classList.toggle("hidden", visibleRecords.length > 0);
   recordsList.innerHTML = visibleRecords
     .map(
@@ -137,13 +127,7 @@ function renderRecords() {
             Profesor/a
           </div>
           <div class="record-description">${escapeHtml(record.incidencia)}</div>
-          ${
-            record.creado_por === currentUserId
-              ? `<button class="delete-button" type="button" data-delete-id="${record.id}">
-                  Eliminar
-                </button>`
-              : ""
-          }
+          <button class="delete-button" type="button" data-delete-id="${record.id}">Eliminar</button>
         </article>
       `
     )
@@ -155,64 +139,34 @@ function updateStats() {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 6);
   const weekAgoIso = isoDate(weekAgo);
-
   document.querySelector("#total-count").textContent = records.length;
-  document.querySelector("#today-count").textContent = records.filter(
-    (record) => record.fecha_incidencia === today
-  ).length;
-  document.querySelector("#week-count").textContent = records.filter(
-    (record) => record.fecha_incidencia >= weekAgoIso
-  ).length;
+  document.querySelector("#today-count").textContent =
+    records.filter((record) => record.fecha_incidencia === today).length;
+  document.querySelector("#week-count").textContent =
+    records.filter((record) => record.fecha_incidencia >= weekAgoIso).length;
 }
 
-async function handleSession(session) {
-  if (!session) {
-    records = [];
-    currentUserId = null;
-    showView("auth");
-    return;
-  }
-
-  currentUserId = session.user.id;
-  document.querySelector("#user-email").textContent = session.user.email;
-  showView("dashboard");
-  await loadRecords();
+function logout() {
+  centerPin = null;
+  records = [];
+  sessionStorage.removeItem("centerPin");
+  document.querySelector("#login-form").reset();
+  showView("auth");
 }
 
 document.querySelector("#login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!client) return;
-
-  if (window.location.protocol === "file:") {
-    setMessage(
-      authMessage,
-      "Para recibir un enlace válido, abre la aplicación publicada en Vercel."
-    );
-    return;
-  }
-
-  setMessage(authMessage, "Enviando el enlace de acceso...", true);
-  const { error } = await client.auth.signInWithOtp({
-    email: document.querySelector("#login-email").value,
-    options: { emailRedirectTo: config.publicUrl },
-  });
-
-  if (error) {
-    setMessage(authMessage, authErrorMessage(error));
-    return;
-  }
-
-  setMessage(
-    authMessage,
-    "Enlace enviado. Revisa tu correo y pulsa el enlace para entrar.",
-    true
-  );
+  centerPin = document.querySelector("#login-pin").value.trim();
+  setMessage(authMessage, "Comprobando el PIN...", true);
+  const valid = await loadRecords();
+  if (!valid) return;
+  sessionStorage.setItem("centerPin", centerPin);
+  setMessage(authMessage, "");
+  showView("dashboard");
 });
 
-document.querySelector("#logout-button").addEventListener("click", async () => {
-  await client.auth.signOut();
-});
-
+document.querySelector("#logout-button").addEventListener("click", logout);
 document.querySelector("#open-modal-button").addEventListener("click", () => {
   document.querySelector("#incident-date").value = isoDate();
   setMessage(incidentMessage, "");
@@ -234,23 +188,17 @@ modal.addEventListener("click", (event) => {
 document.querySelector("#incident-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   setMessage(incidentMessage, "Guardando...", true);
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  const { error } = await client.from("registros").insert({
-    aula_ubicacion: document.querySelector("#incident-location").value.trim(),
-    nombre_profesor: document.querySelector("#incident-teacher").value.trim(),
-    incidencia: document.querySelector("#incident-description").value.trim(),
-    fecha_incidencia: document.querySelector("#incident-date").value,
-    creado_por: user.id,
+  const { error } = await client.rpc("crear_registro", {
+    p_pin: centerPin,
+    p_aula_ubicacion: document.querySelector("#incident-location").value.trim(),
+    p_nombre_profesor: document.querySelector("#incident-teacher").value.trim(),
+    p_incidencia: document.querySelector("#incident-description").value.trim(),
+    p_fecha_incidencia: document.querySelector("#incident-date").value,
   });
-
   if (error) {
-    setMessage(incidentMessage, error.message);
+    setMessage(incidentMessage, rpcErrorMessage(error));
     return;
   }
-
   closeModal();
   showToast("Incidencia registrada.");
   await loadRecords();
@@ -258,16 +206,15 @@ document.querySelector("#incident-form").addEventListener("submit", async (event
 
 recordsList.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-delete-id]");
-  if (!button) return;
-
-  if (!confirm("¿Quieres eliminar esta incidencia del registro compartido?")) return;
-
-  const { error } = await client.from("registros").delete().eq("id", button.dataset.deleteId);
+  if (!button || !confirm("¿Quieres eliminar esta incidencia del registro compartido?")) return;
+  const { error } = await client.rpc("eliminar_registro", {
+    p_pin: centerPin,
+    p_id: button.dataset.deleteId,
+  });
   if (error) {
-    showToast(`No se pudo eliminar: ${error.message}`);
+    showToast(`No se pudo eliminar: ${rpcErrorMessage(error)}`);
     return;
   }
-
   showToast("Incidencia eliminada.");
   await loadRecords();
 });
@@ -275,7 +222,8 @@ recordsList.addEventListener("click", async (event) => {
 document.querySelector("#search-input").addEventListener("input", renderRecords);
 document.querySelector("#date-filter").addEventListener("change", renderRecords);
 
-if (client) {
-  client.auth.onAuthStateChange((_event, session) => handleSession(session));
-  client.auth.getSession().then(({ data }) => handleSession(data.session));
+if (client && centerPin) {
+  loadRecords().then((valid) => {
+    if (valid) showView("dashboard");
+  });
 }
