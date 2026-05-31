@@ -30,6 +30,14 @@ function setMessage(element, text, success = false) {
   element.style.color = success ? "#1b5949" : "#a23d32";
 }
 
+function authErrorMessage(error) {
+  if (error?.message?.toLowerCase().includes("email rate limit exceeded")) {
+    return "Se han solicitado demasiados enlaces. Espera unos minutos y vuelve a intentarlo.";
+  }
+
+  return error?.message ?? "No se pudo completar el acceso.";
+}
+
 function showToast(message) {
   const toast = document.querySelector("#toast");
   toast.textContent = message;
@@ -190,7 +198,7 @@ document.querySelector("#login-form").addEventListener("submit", async (event) =
   });
 
   if (error) {
-    setMessage(authMessage, error.message);
+    setMessage(authMessage, authErrorMessage(error));
     return;
   }
 
