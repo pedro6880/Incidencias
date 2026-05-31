@@ -43,7 +43,9 @@ Cuando Vercel muestre la URL pública, por ejemplo
 
 1. Ve a **Authentication > URL Configuration**.
 2. Cambia **Site URL** por la URL pública de Vercel.
-3. Añade la misma dirección en **Redirect URLs**, terminada en `/**`:
+3. Añade la dirección exacta en **Redirect URLs**:
+   `https://parte-de-aula.vercel.app/`.
+4. Añade también la misma dirección terminada en `/**` para admitir rutas:
    `https://parte-de-aula.vercel.app/**`.
 
 ## Acceso de profesores

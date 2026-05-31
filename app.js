@@ -62,6 +62,9 @@ if (!configured) {
     "Falta configurar Supabase. Abre app-config.js e introduce la URL y la clave pública del proyecto."
   );
 }
+else {
+  document.title = `${document.title} · ${config.version}`;
+}
 
 const client = configured
   ? supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
@@ -172,12 +175,18 @@ document.querySelector("#login-form").addEventListener("submit", async (event) =
   event.preventDefault();
   if (!client) return;
 
-  const redirectUrl =
-    window.location.protocol === "file:" ? undefined : window.location.origin;
+  if (window.location.protocol === "file:") {
+    setMessage(
+      authMessage,
+      "Para recibir un enlace válido, abre la aplicación publicada en Vercel."
+    );
+    return;
+  }
+
   setMessage(authMessage, "Enviando el enlace de acceso...", true);
   const { error } = await client.auth.signInWithOtp({
     email: document.querySelector("#login-email").value,
-    options: redirectUrl ? { emailRedirectTo: redirectUrl } : undefined,
+    options: { emailRedirectTo: config.publicUrl },
   });
 
   if (error) {

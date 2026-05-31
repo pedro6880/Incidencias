@@ -3,4 +3,6 @@
 window.APP_CONFIG = {
   supabaseUrl: "https://zuyjygpfnsufmlrtktfu.supabase.co",
   supabaseAnonKey: "sb_publishable_BnXhSeN87Iu62bVwv5T0Mw_NtFYSAxV",
+  publicUrl: "https://incidencias-ten.vercel.app/",
+  version: "2026.06.01-1",
 };
